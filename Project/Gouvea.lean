@@ -147,21 +147,47 @@ open Polynomial
 Firstly, need to replace ℝ[X] with F[X] for F some complete extension of Q_p
 -/
 
-def Set1 (f : ℚ[X]) (p : ℕ) (c : ℝ) : Set ℝ :=
-  {padicValRat p (coeff f i) * c^i | (i : ℕ)}
 
-/- Not needed if sSup works as intended??
-def Set2 (f : ℚ[X]) (p : ℕ) (c : ℝ) : Set ℝ :=
-  {u | (∃ u' : Set1 f p c, u'.1 = u) ∧ (∀ v : Set1 f p c, u ≥ v.1)}
--/
+-- May need to be chagning to supremum of finite sets?? As this would make it easier?
 
 noncomputable
-def NonArchimedeanAbsVal_c (c : ℝ) (p : ℕ) : AbsoluteValue ℚ[X] ℝ where
-  toFun := fun f => sSup (Set1 f p c)
-  map_mul' := sorry
-  nonneg' := sorry
-  eq_zero' := sorry
-  add_le' := sorry
+def NonArchimedeanAbsVal_c (c : ℝ) (h : c > 0) (p : ℕ) : AbsoluteValue ℚ[X] ℝ where
+  toFun := fun f => sSup {padicNorm p (coeff f i) * c^i | (i : ℕ)}
+  map_mul' := by
+    intro x y
+    simp only -- multiplicativity is in Gouvea's book (says its hard)
+    sorry
+  nonneg' := by
+    intro x
+    simp only
+    have : ∀ (i : ℕ ), (padicNorm p (x.coeff i)) ≥  0 := by
+      intro i
+      exact padicNorm.nonneg (x.coeff i)
+    have : ∀ (i : ℕ), (padicNorm p (x.coeff i)) * c ^ i ≥ 0 := by
+      intro i
+      sorry
+    sorry -- should be easy... supremum of a set of positive numbers
+  eq_zero' := by
+    intro x
+    simp only
+    constructor
+    · intro h
+      contrapose h
+
+      -- inner is ≥ 0 → x_1 can only 0 → x.coeff i = 0 for all i. Need to put this arguement into lean code
+      sorry
+    · intro h
+      have : ∀ i, x.coeff i = 0 := by
+        exact fun i ↦
+          Mathlib.Tactic.ComputeDegree.coeff_congr (congrFun (congrArg coeff h) i) rfl rfl
+      simp_rw [this]
+      simp only [padicNorm.zero, Rat.cast_zero, zero_mul, exists_const, Set.setOf_eq_eq_singleton',
+        csSup_singleton]
+  add_le' := by
+    intro x y
+    simp only [coeff_add]
+    -- this should follow from propery of p-adic norm
+    sorry
 
 
 
