@@ -14,7 +14,7 @@ def NewtonPolygon : Set (Prod M L) :=
     u.2 ≤ q.1.2)}
 
 
--- Another way to write NewtonPolygon? Not sure if it is nicer??
+-- Another way to write NewtonPolygon? Not sure if it is nicer?? Depends on if sInf works as wanted
 def NewtonPolygon2 : Set (Prod M L) :=
   {u : Prod M L | (∃ u' : convexHull F p, u'.1.1 = u.1) ∧
   (u.2 = sInf {v : L | ∃ v' : convexHull F p,  v'.1.1 = u.1 ∧ v = v'.1.2})}
@@ -42,6 +42,18 @@ def NextPoint (l : NewtonPolygon_breaks k t) : Set (NewtonPolygon_breaks k t) :=
 
 -------------- Testing
 
+def set1 : Set (ℝ) := {1 , 2 , 3}
+
+def testing : sInf set1 = 1 := by
+  simp_rw [sInf]
+  simp_rw [sSup]
+  rw [set1]
+  simp only [Set.neg_insert, Set.neg_singleton, Set.insert_nonempty, bddAbove_insert,
+    bddAbove_singleton, and_self, ↓reduceDIte]
+  simp_rw [Classical.choose]
+
+  -- seemingly could be okay?? not sure.
+
 
 -- Idea for removing dependency of NextPoint being a set?? What happens in non discrete sets??????
 
@@ -54,7 +66,10 @@ def NextPoint2_1 (l : NewtonPolygon_breaks k t) : Set k :=
 def NewtonPolygon_slope_length2 (l : NewtonPolygon_breaks k t) : k :=
   (sInf (NextPoint2_1 k t l)) - l.1.1
 
--- Why not take it a step further
+-- Why not take it a step further; do not like the sInf on the second point, but unsure if this is something i can remove?
+-- Maybe there is a way to define it since that set should be of size one?
+
+-- What happens when NextPoint doesnt exist??
 
 def NextPoint3 (l : NewtonPolygon_breaks k t) : Prod k k :=
   (sInf {u : k | ∃ u' : NewtonPolygon_breaks k t, u'.1.1 = u ∧ u > l.1.1} ,
@@ -67,8 +82,13 @@ def NewtonPolygon_slope_length3 (l : NewtonPolygon_breaks k t) : k :=
 def NewtonPolygon_slope3 (l : NewtonPolygon_breaks k t) : k :=
   ((NextPoint3 k t l).2 - l.1.2) / ((NextPoint3 k t l).1 - l.1.1)
 
+def FirstPoint2 : Prod k k :=
+  (sInf {u : k| ∃ u' : NewtonPolygon_breaks k t, u'.1.1 = u},
+  sInf {u : k | ∃ u' : NewtonPolygon_breaks k t,
+  u'.1.1 = sInf {v : k | ∃ v' : NewtonPolygon_breaks k t, v'.1.1 = v} ∧ u = u'.1.2} )
 
-
+-- I could define a function k → k that takes the first entry of the NewtonPolygon and outputs the second entry??
+-- This would be able to remove the second sInf which seems superflurous
 ------------------
 
 
