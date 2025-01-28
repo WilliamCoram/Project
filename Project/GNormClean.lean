@@ -48,7 +48,7 @@ theorem cnorm_eq_zero (hc : 0 < c) : ∀ (x : ℚ[X]), cnorm c p x = 0 ↔ x = 0
     have h1 : ∀ i : ℕ, ↑(padicNorm p (f.coeff i)) * c ^ i ≤ 0 := by
       have (u : {x | ∃ i, ↑(padicNorm p (f.coeff i)) * c ^ i = x}) : u ≤
           sSup {x | ∃ i, ↑(padicNorm p (f.coeff i)) * c ^ i = x} := by
-        -- literally by definition - unless its the worry of unbounded messing with things.
+
         sorry
       simp only [Set.coe_setOf, Set.mem_setOf_eq, Subtype.forall, forall_exists_index,
         forall_apply_eq_imp_iff] at this
@@ -65,13 +65,7 @@ theorem cnorm_eq_zero (hc : 0 < c) : ∀ (x : ℚ[X]), cnorm c p x = 0 ↔ x = 0
     simp only [mul_eq_zero, Rat.cast_eq_zero, pow_eq_zero_iff', ne_eq] at h2
     simp only [this, false_and, or_false] at h2
     have : ∀ i : ℕ, f.coeff i = 0 := by
-      intro i
-      contrapose h2
-      simp only [not_forall]
-      use i
-      contrapose h2
-      simp only [Decidable.not_not]
-      simp only [Decidable.not_not] at h2
+
       sorry
     rw [← leadingCoeff_eq_zero, leadingCoeff]
     use this f.natDegree
@@ -101,19 +95,17 @@ theorem cnorm_nonarchimidean (hc : 0 < c) (p : ℕ) [hp : Fact (Nat.Prime p)]: �
   have h2 : ∀ i : ℕ, padicNorm p (f.coeff i + g.coeff i) * c^i ≤ padicNorm p (f.coeff i) * c^i ⊔
       padicNorm p (g.coeff i) * c^i := by
     sorry
-  -- basically just need to argue that sSup preserves these inequalities over all i.
-  -- ideally if we can show that sSup is just it at some i.
-
   sorry
 
 
-theorem cnorm_add_leq (hc : 0 < c) : ∀ (x y : ℚ[X]), cnorm c p (x + y) ≤ cnorm c p x + cnorm c p y := by
+theorem cnorm_add_leq (hc : 0 < c) : ∀ (x y : ℚ[X]), cnorm c p (x + y) ≤ cnorm c p x + cnorm c p y
+    := by
   have (x y : ℚ[X]) : max (cnorm c p x) (cnorm c p y) ≤ cnorm c p x + cnorm c p y := by
     simp only [sup_le_iff, le_add_iff_nonneg_right, le_add_iff_nonneg_left]
     constructor
     · exact cnorm_nonneg c p hc y
     · exact cnorm_nonneg c p hc x
-  have h := cnorm_nonarchimidean c p hc
+  have h := cnorm_nonarchimidean c hc p
   exact fun x y ↦
     Preorder.le_trans (cnorm c p (x + y)) (cnorm c p x ⊔ cnorm c p y) (cnorm c p x + cnorm c p y)
       (h x y) (this x y)
