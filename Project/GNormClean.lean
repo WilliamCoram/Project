@@ -153,3 +153,7 @@ theorem WeierstrassPrepThm_polynomials (hc : c > 0) (f : ℚ[X]) (hf : degree f 
     (∀ j > N, cnorm c p f > padicNorm p (coeff f j) * c^j)) : ∃ g h : ℚ[X], (degree g = (N : ℕ)) ∧
     (degree h = n - N) ∧ (f = g * h) ∧ (cnorm c p f = cnorm c p g) ∧ (cnorm c p (h - (1 : ℚ[X])) < 1) := by
       sorry
+
+
+
+----------------------------------------------------------------------------------------------------

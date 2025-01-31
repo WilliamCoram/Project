@@ -26,7 +26,7 @@ end NewtonPolygon
 
 section ksquared_def
 
-variable (k : Type*) [OrderedRing k] [Field k] [InfSet k]
+variable (k : Type*) [LinearOrderedField k]
 variable (t : Set (Prod k k))
 
 
@@ -122,3 +122,15 @@ lemma SubsequentPointsMinValue (q : NewtonPolygon k k k t) (l : FirstPoint k t)
   sorry
 
 end ksquared_firstslope
+
+
+/-
+After the zulip discussion it seems that sInf is something I can ignore. More importantly, I could just
+specialise to ℝ - will see the case of ℚ, when Kevin replies.
+
+May want to keep lower convex hulls seperate for now (need to change the definiton of lower convex hull
+regardless, as it is NOT a Newton Polygon!)
+
+Consider Michaels question of defining Newton Polygons as a union of line segments. Then showing this
+is a lower convex hull??
+-/
