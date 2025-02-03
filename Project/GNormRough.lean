@@ -34,6 +34,8 @@ theorem cnorm1_nonneg (hc : 0 < c) : ∀ (x : PowerSeries ℚ_[p]), 0 ≤ cnorm1
     · simp only [Rat.cast_nonneg, apply_nonneg]
     · apply pow_nonneg
       exact le_of_lt hc
+  exact this j
+
 
 /- This isnt true anymore, but for the polynomials we want it will be -/
 def myset1_bddabove (f : PowerSeries ℚ_[p]): BddAbove {padicNormE (coeff _ i f) * c^i | (i : ℕ)} := by
@@ -288,6 +290,7 @@ def cnorm1_seminorm (hc : 0 < c) : Seminorm ℚ_[p] (PowerSeries ℚ_[p]) where
     intro a f
     simp_rw [cnorm1]
     simp only [map_smul, smul_eq_mul, AbsoluteValue.map_mul, Rat.cast_mul]
+
     sorry
 
 
@@ -305,14 +308,21 @@ Idea: Show seminorm on general powerseries
 
 -- unsure if I should be using filters? which i dont understand
 
-structure PowerSeries_restricted (R : Type*) [NormedRing R] where
+open Filter
+
+open scoped Topology
+
+structure PowerSeries_restricted (R : Type*) (c : ℝ) [NormedRing R] where
   f : PowerSeries R
-  convergence : ∀ k : ℝ, ∃ N : ℕ, N < i →  (norm (PowerSeries.coeff R i f)) * c^i < k
+  convergence : Tendsto (fun (i : ℕ) => (norm (PowerSeries.coeff R i f)) * c^i) atTop (𝓝 0)
+
+
+--- extends??
 
 -- Want to replicate everything but using this now. (Realistacly this will only be used in the proofs of bddabove and existanc
 
 /- This required minimal changes, just-/
-theorem cnorm1_nonneg1 (hc : 0 < c) : ∀ (x : PowerSeries_restricted c ℚ_[p]), 0 ≤ cnorm1 c p x.1 := by
+theorem cnorm1_nonneg1 (hc : 0 < c) : ∀ (x : PowerSeries_restricted ℚ_[p] c), 0 ≤ cnorm1 c p x.1 := by
   intro f
   rw [cnorm1]
   have := cnorm1_existance c p f.1
@@ -325,3 +335,51 @@ theorem cnorm1_nonneg1 (hc : 0 < c) : ∀ (x : PowerSeries_restricted c ℚ_[p])
     · apply pow_nonneg
       exact le_of_lt hc
   exact this j
+
+theorem cnorm1_eq_zero1 (hc : 0 < c) : ∀ (x : PowerSeries_restricted ℚ_[p] c), cnorm1 c p x.1 = 0 ↔ x.1 = 0 := by
+  intro f
+  rw [cnorm1]
+  constructor
+  · intro h1
+    have start (a : ℝ) (ha : a ∈ {padicNormE (PowerSeries.coeff _ i f.1) * c^i | (i : ℕ)}) :=
+      le_csSup (myset1_bddabove c p f.1) ha
+    simp only [Set.mem_setOf_eq, forall_exists_index, forall_apply_eq_imp_iff] at start
+    have interim : ∀ i : ℕ, padicNormE (PowerSeries.coeff _ i f.1) = 0 := by
+      have hh : ∀ (i : ℕ), 0 ≤ (padicNormE (PowerSeries.coeff _ i f.1)) * c ^ i := by
+        intro i
+        apply mul_nonneg
+        · simp only [Rat.cast_nonneg]
+          exact AbsoluteValue.nonneg padicNormE ((PowerSeries.coeff ℚ_[p] i) f.1)
+        · apply pow_nonneg
+          exact le_of_lt hc
+      simp_rw [h1] at start
+      have : ∀ (i : ℕ), ↑(padicNormE (PowerSeries.coeff _ i f.1)) * c ^ i = 0 := by
+        intro i
+        apply LE.le.eq_of_not_gt
+        · exact hh i
+        · simp only [not_lt]
+          exact start i
+      have hcc : c ≠ 0 := by
+        exact Ne.symm (ne_of_lt hc)
+      simp only [mul_eq_zero, Rat.cast_eq_zero, pow_eq_zero_iff', hcc, ne_eq, false_and,
+        or_false] at this
+      exact this
+    have final : ∀ i : ℕ, PowerSeries.coeff _ i f.1 = 0 := by
+      intro i
+      exact (AbsoluteValue.eq_zero padicNormE).mp (interim i)
+    exact PowerSeries.ext final
+  · have := cnorm1_existance c p f.1
+    obtain ⟨j, hj⟩ := this
+    simp_rw [hj]
+    intro hf
+    have : f.1 = 0 → ∀ i, PowerSeries.coeff _ i f.1 = 0 := by
+      intro hf i
+      exact
+        (AddSemiconjBy.eq_zero_iff ((PowerSeries.coeff ℚ_[p] i) 0)
+              (congrFun
+                (congrArg HAdd.hAdd (congrArg (⇑(PowerSeries.coeff ℚ_[p] i)) (id (Eq.symm hf))))
+                ((PowerSeries.coeff ℚ_[p] i) 0))).mp
+          rfl
+    apply this at hf
+    simp_rw [hf]
+    simp only [AbsoluteValue.map_zero, Rat.cast_zero, zero_mul]
