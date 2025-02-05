@@ -43,7 +43,6 @@ lemma cNorm_element_nonneg (f : PowerSeries_restricted_c ℚ_[p] c) (hc : 0 < c)
   · apply pow_nonneg
     exact le_of_lt hc
 
-
 theorem cNorm_nonneg (hc : 0 < c) : ∀ (x : PowerSeries_restricted_c ℚ_[p] c),
     0 ≤ cNorm c p x.1 := by
   intro f
@@ -51,7 +50,6 @@ theorem cNorm_nonneg (hc : 0 < c) : ∀ (x : PowerSeries_restricted_c ℚ_[p] c)
   obtain ⟨j, hj⟩ := this
   simp_rw [cNorm, hj]
   exact cNorm_element_nonneg c p f hc j
-
 
 theorem cNorm_eq_zero (hc : 0 < c) : ∀ (x : PowerSeries_restricted_c ℚ_[p] c),
     cNorm c p x.1 = 0 ↔ x.1 = 0 := by
@@ -260,3 +258,55 @@ Show absolute value on polynomials (will need to show polynomials are restricted
 Show its a norm? Not sure how to do this. Maybe show its a normedspace?
 Continue to Weierstrass preperation theorem
 -/
+
+noncomputable
+def PolyToPowerSeries_restricted (f : Polynomial ℚ_[p]) : PowerSeries_restricted_c ℚ_[p] c where
+  function := Polynomial.toPowerSeries f
+  convergence := by
+    simp only [Polynomial.coeff_coe]
+    -- true since eventually coeff are zero
+    sorry
+
+noncomputable
+def cNorm_poly : (Polynomial ℚ_[p]) → ℝ :=
+  fun f => cNorm c p f
+
+
+lemma cNorm_poly_mul_ge (f g : Polynomial ℚ_[p]) : cNorm_poly c p (f * g) ≥
+    cNorm_poly c p f * cNorm_poly c p g := by
+  -- this may not be the best way to do it after all. May need a think.
+  sorry
+
+
+noncomputable
+def cNorm_poly_AbsVal (hc : 0 < c) : AbsoluteValue (Polynomial ℚ_[p]) ℝ where
+  toFun := cNorm_poly c p
+  map_mul' := by
+    intro f g
+    have ge := cNorm_poly_mul_ge c p f g
+    have le := cNorm_mul_le c p hc (PolyToPowerSeries_restricted c p f)
+        (PolyToPowerSeries_restricted c p g)
+    simp_rw [cNorm_poly]
+    simp_rw [cNorm_poly] at ge
+    -- once again I need my coercions to hold up with mulitplication
+    sorry
+  nonneg' := by
+    intro f
+    simp_rw [cNorm_poly]
+    exact cNorm_nonneg c p hc (PolyToPowerSeries_restricted c p f)
+  eq_zero' := by
+    intro f
+    simp_rw [cNorm_poly]
+    have := cNorm_eq_zero c p hc (PolyToPowerSeries_restricted c p f)
+    simp_rw [PolyToPowerSeries_restricted] at this
+    -- need some slight coercion
+    sorry
+  add_le' := by
+    intro f g
+    simp_rw [cNorm_poly]
+    have := cNorm_add_le c p hc (PolyToPowerSeries_restricted c p f)
+        (PolyToPowerSeries_restricted c p g)
+    simp_rw [PolyToPowerSeries_restricted] at this
+    -- again this needs some better formatting?
+    simp only [Polynomial.coe_add, ge_iff_le]
+    sorry
