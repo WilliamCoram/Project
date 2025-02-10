@@ -31,7 +31,10 @@ def Reducedset (t : Set (Prod ℝ ℝ)) (u : t)  : Set (Prod ℝ ℝ) :=
 
 -- Could try something like this, but not sure how to specialise at each of the new firstpoints
 def StepFun : Set (Prod ℝ ℝ) → Set (Prod ℝ ℝ) :=
-  fun t => Reducedset t
+  fun t => if h : ∃ u : t, true then
+    let u := Classical.choose h
+    Reducedset t u
+    else t
 
 
 
@@ -43,12 +46,8 @@ def half (n : Nat) : Nat :=
   | n + 2 => half n + 1
 termination_by structural n
 
-def function (t : Set (Prod ℝ ℝ)): t → Set (Prod ℝ ℝ) :=
-  fun u => (Reducedset t u)
-
-def IndexingFunction (t : Set (Prod ℝ ℝ)): ℕ → Prod ℝ ℝ :=
+def IndexingFunction (t : Set (Prod ℝ ℝ)) : ℕ → Prod ℝ ℝ :=
   sorry
-
 
 ----------------------------------------------------------------------------------------------------
 
@@ -64,7 +63,7 @@ def SetofSlopes (a : t) : Set ℝ :=
   { c  | ∃ b : t, b.1.1 > a.1.1 ∧ c = (a.1.2 - b.1.2) / (a.1.1 - b.1.1) }
 
 def SetofSlopes_finite (a : t) : Set.Finite (SetofSlopes t a) := by
-  -- t finite
+  -- t finite, image of a fin set 
   sorry
 
 def SetofSlopes_nonempty (a : t)  : (Set.Finite.toFinset (SetofSlopes_finite t a)).Nonempty :=
@@ -96,10 +95,14 @@ def SetofSlopes_minimum_nextpoint (a : t) : Set (Prod ℝ ℝ) :=
 -- Then we can takes its max (and ignore multiplicity)
 --                       min (and consider multiplicity)
 
+structure FinalPoint (t : Set (Prod ℝ ℝ)) where
+  point : t
+  maximal : ∀ v : t, v.1.1 ≤ point.1.1
+
 def SetofSlopes_minimum_nextpoint_finite (a : t) : Set.Finite (SetofSlopes_minimum_nextpoint t a) := by
   sorry
 
-/- This is not always true -/
+/- This is not always true, need to assume it is not the final point -/
 def SetofSlopes_minimum_nextpoint_nonempty (a : t) :
     (Set.Finite.toFinset (SetofSlopes_minimum_nextpoint_finite t a)).Nonempty := by
   sorry
@@ -109,11 +112,104 @@ Now we can construct our function mapping 0 to first point,
   i+1 to SetofSlopes_minimum_nexpoint f^i
 -/
 
-def NextPoint : t → t :=
-  fun a => SetofSlopes_minimum_nextpoint t a --- when nonempty; if empty need to map to something else?
+noncomputable
+def NextPoint (t : Finset (ℝ × ℝ)) (u : t) : t :=
+  if h : ∃ b : t, b.1.1 > u.1.1 ∧ (u.1.2 - b.1.2) / (u.1.1 - b.1.1) = SetofSlopes_minimum t u
+  then Classical.choose h
+  else u
 
-
-def IndexFunction (a : FirstPoint t) : ℕ → t :=
-  fun i => (NextPoint)^[i] t a.1
+noncomputable
+def IndexFunction (t : Finset (ℝ × ℝ)) (a : t) : ℕ → t :=
+  fun i => Nat.iterate (NextPoint t) i a
 
 -- The Newton Polygon can then be defined via taking the union of slopes between this indexing set??
+
+
+
+
+
+/-
+Could also use Int.csInf_mem that is the minimum point exists. This can be used to define the x
+first coordinate of the next point
+
+-/
+
+
+-- Need to adjust such that coeff is non zero
+
+def Poly_set' (f : PowerSeries ℚ_[p]) : Set (Prod ℤ ℝ) :=
+  {((i , Padic.valuation (coeff ℚ_[p] i f)) : Prod ℤ ℝ) | ∀ i : ℕ, (coeff ℚ_[p] i f) ≠ 0}
+
+
+
+def Poly_set'' (f : PowerSeries ℚ_[p]) : Set (Prod ℤ ℝ) :=
+  {(a,b) : Prod ℤ ℝ | ∃ i : ℕ, a = i ∧ (coeff ℚ_[p] i f) ≠ 0 ∧ b = Padic.valuation (coeff ℚ_[p] i f)}
+
+def Poly_set''_firstCoord (f : PowerSeries ℚ_[p]): Set ℤ :=
+  {a : ℤ | ∃ (u : Poly_set'' p f), u.1 = a }
+
+
+/- or define firstCoord first -/
+
+def Poly_firstCoord (f : PowerSeries ℚ_[p]) : Set ℕ :=
+  {a | ∃ i : ℕ, a = i ∧ (coeff ℚ_[p] i f) ≠ 0 }
+
+noncomputable
+def FirstPoint_firstentry (f : PowerSeries ℚ_[p]) : ℕ:=
+  sInf (Poly_firstCoord p f)
+
+def myset_nonempty : (Poly_firstCoord p f).Nonempty := by
+  simp_rw [Poly_firstCoord]
+  simp only [ne_eq, exists_eq_left']
+  use 0
+  -- at this point will need to give the requirement of f not having first term 0
+  sorry
+
+def myset_bddbelow : BddBelow (Poly_firstCoord p f) := by
+  use 0
+  intro a ha
+  exact Nat.zero_le a
+
+/-
+The two above allows us to use Int.csInf_mem
+-/
+
+noncomputable
+def FirstPoint1 (f : PowerSeries ℚ_[p]) : Prod ℕ ℝ :=
+  (sInf (Poly_firstCoord p f), Padic.valuation (coeff ℚ_[p] (sInf (Poly_firstCoord p f)) f))
+
+def Poly_set1 (f : PowerSeries ℚ_[p]) : Set (Prod ℕ ℝ) :=
+  {(a,b) : Prod ℕ ℝ | ∃ i : ℕ, a = i ∧ (coeff ℚ_[p] i f) ≠ 0 ∧ b = Padic.valuation (coeff ℚ_[p] i f)}
+
+
+noncomputable
+def FirstPointinc (f : PowerSeries ℚ_[p]) : FirstPoint1 p f ∈ Poly_set1 p f := by
+  sorry
+--- But from here if I can adjust the definition of NextPoint we could be good.
+
+
+
+
+
+
+
+
+
+-- alternatively if we set it up so that we always have first point (0,0)?
+
+
+----- if we can switch nextpoint and the above to non-finite t we are looking good.
+
+variable (U : Set (Prod ℝ ℝ))
+
+def SetofSlopesNew (a : U) : Set ℝ :=
+  { c  | ∃ b : t, b.1.1 > a.1.1 ∧ c = (a.1.2 - b.1.2) / (a.1.1 - b.1.1) }
+
+
+
+noncomputable
+def NextPointNew (t : Set (ℝ × ℝ)) (u : t) : t :=
+  if h : ∃ b : t, b.1.1 > u.1.1 ∧ (u.1.2 - b.1.2) / (u.1.1 - b.1.1) = SetofSlopes_minimum t u
+  then Classical.choose h
+  else u
+

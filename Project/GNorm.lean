@@ -10,7 +10,23 @@ structure PowerSeries_restricted_c (R : Type*) (c : ℝ) [NormedRing R] where
   function : PowerSeries R
   convergence : Tendsto (fun (i : ℕ) => (norm (coeff R i function)) * c^i) atTop (𝓝 0)
 
-instance [NormedRing R] : Semiring (PowerSeries_restricted_c R c) := sorry
+instance [NormedRing R] : Semiring (PowerSeries_restricted_c R c) := by
+  sorry
+  /-
+  zero := { function := 0, convergence := by
+              simp only [map_zero, norm_zero, zero_mul, tendsto_const_nhds_iff] }
+  one := { function := 1, convergence := by
+              simp only [coeff_one]
+              sorry }
+  add f g := { function := f.function + g.function, convergence := by
+                simp only [map_add]
+                sorry }
+  mul f g := { function := f.function * g.function, convergence := sorry}
+  zero_add := by
+                intro f
+  -/
+
+
 
 /-- Generalisation of Gauss' norm.-/
 noncomputable
@@ -107,6 +123,7 @@ theorem cNorm_nonarchimidean (hc : 0 < c): ∀ (x y : PowerSeries_restricted_c �
     simp only [le_sup_iff, hc, pow_pos, mul_le_mul_right, Rat.cast_le]
     simp only [le_sup_iff] at this
     exact this
+
   -- done upto combining inequalities
   sorry
 
@@ -130,6 +147,7 @@ lemma cNorm_mul_le_ext1 (f g : PowerSeries_restricted_c ℚ_[p] c) (hc : 0 < c) 
   intro k
   have := coeff_mul k f.1 g.1
   have oops : (coeff ℚ_[p] k) (f.function * g.function)  = (coeff ℚ_[p] k) (f * g).function := by
+    -- follows from multiplication of functions?
     sorry
   simp_rw [← oops, this]
   have : ∃ i j : ℕ, i + j = k ∧
@@ -264,7 +282,8 @@ def PolyToPowerSeries_restricted (f : Polynomial ℚ_[p]) : PowerSeries_restrict
   function := Polynomial.toPowerSeries f
   convergence := by
     simp only [Polynomial.coeff_coe]
-    -- true since eventually coeff are zero
+    simp_rw [Tendsto]
+    simp_rw [Filter.map]
     sorry
 
 noncomputable
@@ -272,23 +291,24 @@ def cNorm_poly : (Polynomial ℚ_[p]) → ℝ :=
   fun f => cNorm c p f
 
 
-lemma cNorm_poly_mul_ge (f g : Polynomial ℚ_[p]) : cNorm_poly c p (f * g) ≥
+lemma cNorm_poly_mul_ge (f g : Polynomial ℚ_[p]) (hc : 0 < c) : cNorm_poly c p (f * g) ≥
     cNorm_poly c p f * cNorm_poly c p g := by
-  -- this may not be the best way to do it after all. May need a think.
   sorry
-
 
 noncomputable
 def cNorm_poly_AbsVal (hc : 0 < c) : AbsoluteValue (Polynomial ℚ_[p]) ℝ where
   toFun := cNorm_poly c p
   map_mul' := by
     intro f g
-    have ge := cNorm_poly_mul_ge c p f g
+    have ge := cNorm_poly_mul_ge c p f g hc
     have le := cNorm_mul_le c p hc (PolyToPowerSeries_restricted c p f)
         (PolyToPowerSeries_restricted c p g)
+    simp only [ge_iff_le] at ge
     simp_rw [cNorm_poly]
     simp_rw [cNorm_poly] at ge
-    -- once again I need my coercions to hold up with mulitplication
+    simp_rw [PolyToPowerSeries_restricted] at le
+
+    -- very close need to rw le
     sorry
   nonneg' := by
     intro f
@@ -297,16 +317,23 @@ def cNorm_poly_AbsVal (hc : 0 < c) : AbsoluteValue (Polynomial ℚ_[p]) ℝ wher
   eq_zero' := by
     intro f
     simp_rw [cNorm_poly]
-    have := cNorm_eq_zero c p hc (PolyToPowerSeries_restricted c p f)
-    simp_rw [PolyToPowerSeries_restricted] at this
-    -- need some slight coercion
-    sorry
+    have h1 := cNorm_eq_zero c p hc (PolyToPowerSeries_restricted c p f)
+    simp_rw [PolyToPowerSeries_restricted] at h1
+    have h2 : f = 0 ↔ (PolyToPowerSeries_restricted c p f).function = 0 := by
+      simp_rw [PolyToPowerSeries_restricted]
+      exact Iff.symm Polynomial.coe_eq_zero_iff
+    simp_rw [PolyToPowerSeries_restricted] at h2
+    exact Iff.trans h1 (id (Iff.symm h2))
   add_le' := by
     intro f g
     simp_rw [cNorm_poly]
     have := cNorm_add_le c p hc (PolyToPowerSeries_restricted c p f)
         (PolyToPowerSeries_restricted c p g)
-    simp_rw [PolyToPowerSeries_restricted] at this
-    -- again this needs some better formatting?
+    have help : (PolyToPowerSeries_restricted c p f + PolyToPowerSeries_restricted c p g).function =
+        (PolyToPowerSeries_restricted c p f).function + (PolyToPowerSeries_restricted c p g).function := by
+      simp_rw [PolyToPowerSeries_restricted]
+      -- having issues with addition and multiplication - maybe need to return to it being a semiring
+      sorry
     simp only [Polynomial.coe_add, ge_iff_le]
-    sorry
+    simp_rw [help, PolyToPowerSeries_restricted] at this
+    exact this
