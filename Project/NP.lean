@@ -44,6 +44,8 @@ def First_point (f : PowerSeries_restricted_c ℚ_[p] c) : Prod ℕ ℝ :=
 
 -- Convergence property gives an N such that something?? Not sure what we need to say to give this
 -- finset
+
+-- Convergence such that ∃ N, s.t. ∀ n ≥ N,
 def givenN (f : PowerSeries_restricted_c ℚ_[p] c) (n : ℕ) : ∃ N : ℕ, sorry := sorry
 
 
@@ -73,7 +75,10 @@ noncomputable
 def SetofSlopes_finset (a : U) : Finset ℝ :=
   Set.Finite.toFinset (SetofSlopes_finite U a)
 
-
+-- still need to dfine two functions for i and nu
+-- fun i to set of points to consider slopes on
+-- fun i to x coord (maybe  not needed)
+-- then fun i to y coord
 noncomputable
 def NextPoint (U : Finset (ℝ × ℝ)) (u : U) : U :=
   if h : ¬(SetofSlopes_finset U u).Nonempty then u
@@ -102,5 +107,93 @@ def Indexing_slopes (f : PowerSeries_restricted_c ℚ_[p] c) : ℕ → ℝ
   | 0 => sorry
   | n+1 => sorry
 
+noncomputable
+def NP (f : PowerSeries_restricted_c ℚ_[p] c): ℕ → Prod ℕ ℝ × ℝ :=
+  fun i => (Indexing_points p c f i, Indexing_slopes p c f i)
 
-def NewtonPolygon (f : PowerSeries_restricted_c )
+
+
+-- still need to define two functions for i and nu
+-- fun i to x coord (maybe  not needed; its just ℕ)
+-- fun i to set of points to consider slopes on (by a finset of x coords)
+-- then fun i to point slope pair based on finset
+-- fun point to its next point which is the 'min' of the pairs
+
+-- proceed as before
+-- then NP is the two functions enumerating next points and their slopes
+
+variable (f : PowerSeries_restricted_c ℚ_[p] c)
+
+/-
+def xset : Set ℕ :=
+  {a | ∃ i : ℕ, a = i ∧ (coeff ℚ_[p] i f.function) ≠ 0 }
+-/
+
+/- For now ignoring this
+/- Problem is we need to restrict to when coeff is non-zero? Unless we do not and go more careful later on -/
+def fun_x : ℕ → ℕ :=
+  fun i => i
+-/
+
+/- Function indexing the valuations of the coeff - based on the previous function -/
+noncomputable
+def fun_y : ℕ → ℤ :=
+  fun i => Padic.valuation (coeff ℚ_[p] i f.function)
+
+
+/- This is the corresponding finite set for each (i,nu); with the assumption of indexing the x coords
+this will be where we limit the choice of coeff not 0-/
+def finite_set (i : ℕ) : Finset ℕ :=
+  sorry
+
+
+/- This is the function sending i to its finite set -/
+def fun_set : ℕ → Finset ℕ :=
+  fun i => finite_set i
+
+-- Now we will assume we have a Finset
+
+variable (V : Finset ℕ)
+
+/-
+noncomputable
+def slope_pair (i : ℕ) : V → Prod ℕ ℤ :=
+  fun v => (v, (fun_y p c f v - fun_y p c f i) / (v - i))
+-/
+
+-- the i will be the x coord of the defining Finset
+noncomputable
+def slopes (i : ℕ) : V → ℤ :=
+  fun v => (fun_y p c f v - fun_y p c f i) / (v - i)
+
+-- This requires the set to be non-empty; since the Finset will be non-empty we can conclude this easily
+noncomputable
+def min_slope (i : ℕ) : ℤ :=
+  Finset.min' ((V.attach).image (slopes p c f V i)) sorry
+
+-- This will reduce the finite set to the points that give the minimum slope
+noncomputable
+def reduced_finset (i : ℕ) : Finset ℕ :=
+  V.filter (λ (a : ℕ) =>  (fun_y p c f a - fun_y p c f i) / (a - i) = min_slope p c f V i)
+
+
+-- again this will need the requirement of the set being non-empty; but once again is trivial
+noncomputable
+def next_point (i : ℕ) : ℕ :=
+  Finset.min' (reduced_finset p c f V i) sorry
+
+/- Indexing x coord -/
+noncomputable
+def Index_x : ℕ → ℕ
+  | 0 => 0 -- Just need to adjust 0 to the first point
+  | i + 1 => next_point p c f (fun_set (Index_x i)) (Index_x i)
+
+/- Indexing slope -/
+noncomputable
+def Index_slope : ℕ → ℤ :=
+  fun i => min_slope p c f (fun_set (Index_x p c f i)) (Index_x p c f i)
+
+structure NewtonPolygon where
+  fun_x : ℕ → ℕ
+  fun_slope : ℕ → ℤ
+  relation : fun_slope i = min_slope p c f (fun_set (fun_x i)) (fun_x i)

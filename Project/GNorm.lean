@@ -10,21 +10,146 @@ structure PowerSeries_restricted_c (R : Type*) (c : ℝ) [NormedRing R] where
   function : PowerSeries R
   convergence : Tendsto (fun (i : ℕ) => (norm (coeff R i function)) * c^i) atTop (𝓝 0)
 
-instance [NormedRing R] : Semiring (PowerSeries_restricted_c R c) := by
-  sorry
-  /-
-  zero := { function := 0, convergence := by
+/-
+-- is it maybe easier to show it is a subring of the power series ring?
+instance [NormedRing R] : Ring (PowerSeries_restricted_c R c) where
+  zero := {function := 0, convergence := by
               simp only [map_zero, norm_zero, zero_mul, tendsto_const_nhds_iff] }
-  one := { function := 1, convergence := by
-              simp only [coeff_one]
-              sorry }
-  add f g := { function := f.function + g.function, convergence := by
-                simp only [map_add]
-                sorry }
-  mul f g := { function := f.function * g.function, convergence := sorry}
-  zero_add := by
-                intro f
+  add := sorry
+  add_assoc := sorry
+  zero_add := sorry
+  add_zero := sorry
+  nsmul := sorry
+  add_comm := sorry
+  mul := sorry
+  left_distrib := sorry
+  right_distrib := sorry
+  zero_mul := sorry
+  mul_zero := sorry
+  mul_assoc := sorry
+  one := sorry
+  one_mul := sorry
+  mul_one := sorry
+  neg := sorry
+  zsmul := sorry
+  neg_add_cancel := sorry
+  sub := sorry
+  sub_eq_add_neg := sorry
+  nsmul_zero := sorry
+  nsmul_succ := sorry
+  zsmul_zero' := sorry
+  zsmul_succ' := sorry
+  zsmul_neg' := sorry
+
   -/
+
+def PowerSeries_restricted_set [NormedRing R] : Set (PowerSeries R) :=
+  {g : PowerSeries R | ∃ f : PowerSeries_restricted_c R c, f.function = g}
+
+
+instance subring [NormedRing R] : Subring (PowerSeries R) where
+  carrier := {g : PowerSeries R | ∃ f : PowerSeries_restricted_c R c, f.function = g}
+  zero_mem' := by
+    use {function := 0, convergence := by
+              simp only [map_zero, norm_zero, zero_mul, tendsto_const_nhds_iff] }
+  one_mem' := by
+    use {function := 1, convergence := by
+              simp only [coeff_one]
+              intro ε
+              intro hε
+              simp only [mem_map, mem_atTop_sets, ge_iff_le, Set.mem_preimage]
+              use 1
+              intro b hb
+              have h : ‖((if b = 0 then 1 else 0) : R)‖ * c ^ b = 0 := by
+                simp only [mul_eq_zero, norm_eq_zero, ite_eq_right_iff, pow_eq_zero_iff', ne_eq]
+                left
+                intro h
+                contrapose h
+                simp_rw [← ne_eq]
+                exact Nat.not_eq_zero_of_lt hb
+              simp only [h, sub_zero, norm_zero, mul_zero, zero_mul, sub_self]
+              exact mem_of_mem_nhds hε }
+  add_mem' := by
+    intro a b ha hb
+    obtain ⟨f, hf⟩ := ha
+    obtain ⟨g, hg⟩ := hb
+    simp only [Set.mem_setOf_eq]
+    use {function := f.function + g.function, convergence := by
+              simp only [map_add]
+              intro ε hε
+              simp only [mem_map, mem_atTop_sets, ge_iff_le, Set.mem_preimage]
+              obtain ⟨f, hf⟩ := f
+              obtain ⟨g, hg⟩ := g
+              simp only
+
+              sorry
+              }
+    simp only
+    rw [hf, hg]
+  neg_mem' := by
+    simp only [Set.mem_setOf_eq, forall_exists_index, forall_apply_eq_imp_iff]
+    intro g
+    obtain ⟨g, hg⟩ := g
+    simp only
+    use {function := -g, convergence := by
+              simp only [map_neg, norm_neg]
+              exact hg}
+  mul_mem' := by
+    simp only [Set.mem_setOf_eq, forall_exists_index]
+    intro f g a haf b hbf
+    obtain ⟨a, ha⟩ := a
+    obtain ⟨b, hb⟩ := b
+    rw [← haf, ← hbf]
+    simp only
+    use {function := a * b, convergence := by
+              simp only [coeff_mul]
+              intro ε hε
+              simp only [mem_map, mem_atTop_sets, ge_iff_le, Set.mem_preimage]
+
+              sorry
+              }
+
+noncomputable
+def ring [NormedRing R] : Ring {g : PowerSeries R | ∃ f : PowerSeries_restricted_c R c, f.function = g} := by
+  exact Subring.toRing (subring c)
+
+instance [NormedRing R] : Ring (PowerSeries_restricted_c R c) := by
+
+  sorry
+
+/-
+instance [NormedRing R] : Semiring (PowerSeries_restricted_c R c) where
+  zero := {function := 0, convergence := by
+              simp only [map_zero, norm_zero, zero_mul, tendsto_const_nhds_iff] }
+  one := {function := 1, convergence := by
+              simp only [coeff_one]
+              intro ε
+              intro hε
+              simp only [mem_map, mem_atTop_sets, ge_iff_le, Set.mem_preimage]
+              use 1
+              intro b hb
+              have h : ‖((if b = 0 then 1 else 0) : R)‖ * c ^ b = 0 := by
+                simp only [mul_eq_zero, norm_eq_zero, ite_eq_right_iff, pow_eq_zero_iff', ne_eq]
+                left
+                intro h
+                contrapose h
+                simp_rw [← ne_eq]
+                exact Nat.not_eq_zero_of_lt hb
+              simp only [h, sub_zero, norm_zero, mul_zero, zero_mul, sub_self]
+              exact mem_of_mem_nhds hε
+              }
+  add f g := {function := f.function + g.function, convergence := by
+                simp only [map_add]
+                intro ε hε
+                simp only [mem_map, mem_atTop_sets, ge_iff_le, Set.mem_preimage]
+                obtain ⟨f, hf⟩ := f
+                obtain ⟨g, hg⟩ := g
+                simp only
+
+                sorry
+              }
+  -/
+
 
 
 
@@ -35,12 +160,13 @@ def cNorm : (PowerSeries ℚ_[p])  → ℝ :=
 
 def cNorm_PowerSeries_restricted_bddabove (f : PowerSeries_restricted_c ℚ_[p] c):
     BddAbove {padicNormE (coeff _ i f.1) * c^i | (i : ℕ)} := by
-
+  -- follows from convergence property
   sorry
 
 lemma cNorm_existance (f : PowerSeries_restricted_c ℚ_[p] c) :
     ∃ j : ℕ, sSup {padicNormE (coeff _ i f.1) * c^i | (i : ℕ)} =
     padicNormE (coeff _ j f.1) * c^j := by
+  -- follows from convergence property, then reducing to a finite set and using sup is a max
 
   sorry
 
@@ -147,7 +273,7 @@ lemma cNorm_mul_le_ext1 (f g : PowerSeries_restricted_c ℚ_[p] c) (hc : 0 < c) 
   intro k
   have := coeff_mul k f.1 g.1
   have oops : (coeff ℚ_[p] k) (f.function * g.function)  = (coeff ℚ_[p] k) (f * g).function := by
-    -- follows from multiplication of functions?
+    -- follows from multiplication of polynomials
     sorry
   simp_rw [← oops, this]
   have : ∃ i j : ℕ, i + j = k ∧
@@ -269,6 +395,33 @@ theorem cNorm_mul_le (hc : 0 < c) : ∀ (x y : PowerSeries_restricted_c ℚ_[p] 
 -- This gives everything we will initially want about restricted power series
 
 /-
+def cNorm_isNorm : NormedSpace ℝ (PowerSeries_restricted_c ℚ_[p] c) where
+  norm := cNorm c p
+  mul := cNorm_mul_le c p
+  norm_nonneg := cNorm_nonneg c p
+  norm_eq_zero := cNorm_eq_zero c p
+  add_le := cNorm_add_le c p
+-/
+
+noncomputable
+instance (hc : 0 < c) : RingNorm (PowerSeries_restricted_c ℚ_[p] c) where
+  toFun (f : PowerSeries_restricted_c ℚ_[p] c) := cNorm c p f.1
+  map_zero' := by
+    simp only
+    have := cNorm_eq_zero c p hc 0
+
+    -- need to get ring working properly
+    sorry
+  add_le' := cNorm_add_le c p hc
+  mul_le' := cNorm_mul_le c p hc
+  neg' := by
+    sorry
+  eq_zero_of_map_eq_zero' := by
+    -- not working since havent finished the Ring part
+    sorry
+
+
+/-
 Things to do now:
 Finish sorry's
 Show absolute value on polynomials (will need to show polynomials are restricted power series,
@@ -283,8 +436,21 @@ def PolyToPowerSeries_restricted (f : Polynomial ℚ_[p]) : PowerSeries_restrict
   convergence := by
     simp only [Polynomial.coeff_coe]
     simp_rw [Tendsto]
-    simp_rw [Filter.map]
-    sorry
+    intro ε
+    simp only [mem_map, mem_atTop_sets, ge_iff_le, Set.mem_preimage]
+    have h : ∃ N : ℕ, ∀ n : ℕ, N ≤ n → f.coeff n = 0 := by
+      use (Polynomial.natDegree f + 1)
+      intro n hn
+      exact Polynomial.coeff_eq_zero_of_natDegree_lt hn
+    obtain ⟨N, hN⟩ := h
+    intro h1
+    use N
+    intro n hn
+    have h2 : f.coeff n = 0 := by
+      exact hN n hn
+    simp only [h2, sub_zero, norm_zero, mul_zero, zero_mul, sub_self]
+    exact mem_of_mem_nhds h1
+
 
 noncomputable
 def cNorm_poly : (Polynomial ℚ_[p]) → ℝ :=
@@ -293,7 +459,91 @@ def cNorm_poly : (Polynomial ℚ_[p]) → ℝ :=
 
 lemma cNorm_poly_mul_ge (f g : Polynomial ℚ_[p]) (hc : 0 < c) : cNorm_poly c p (f * g) ≥
     cNorm_poly c p f * cNorm_poly c p g := by
+  simp_rw [cNorm_poly]
+  have := cNorm_existance c p (PolyToPowerSeries_restricted  c p f)
+  obtain ⟨I, hI⟩ := this
+  have := cNorm_existance c p (PolyToPowerSeries_restricted  c p g)
+  obtain ⟨J, hJ⟩ := this
+  /-
+  have h1 : ∀ i j : ℕ, i < I ∧ i + j = I + J → padicNormE ((coeff ℚ_[p] i f) * (coeff ℚ_[p] j g))
+      * c^(((i + j) : ℤ)) ≤ cNorm c p f * cNorm c p g := by
+    intro i j hij
+    have : ↑(padicNormE ((coeff ℚ_[p] i) ↑f * (coeff ℚ_[p] j) ↑g)) * c ^ (((i + j) : ℤ)) =
+        ↑(padicNormE ((coeff ℚ_[p] i) ↑f)) * c ^ (i : ℤ) * (↑(padicNormE ((coeff ℚ_[p] j) ↑g)) * c ^ (j : ℤ)) := by
+      simp only [Polynomial.coeff_coe, AbsoluteValue.map_mul, Rat.cast_mul]
+      ring_nf
+    rw [this]
+    have h2 : ↑(padicNormE ((coeff ℚ_[p] i) ↑f)) * c ^ (i : ℤ) ≤ cNorm c p f := by
+      exact cNorm_sSup_le c p (PolyToPowerSeries_restricted c p f) i
+    have h3 : ↑(padicNormE ((coeff ℚ_[p] j) ↑g)) * c ^ (j : ℤ) ≤ cNorm c p g := by
+      exact cNorm_sSup_le c p (PolyToPowerSeries_restricted c p g) j
+    exact mul_le_mul_of_nonneg h2 h3
+      (cNorm_element_nonneg c p (PolyToPowerSeries_restricted c p f) hc i)
+      (cNorm_nonneg c p hc (PolyToPowerSeries_restricted c p g))
+  have h2 : ∀ i j : ℕ, j < J ∧ i + j = I + J → padicNormE ((coeff ℚ_[p] i f) * (coeff ℚ_[p] j g)) *
+      c^((i + j) : ℤ) ≤ cNorm c p f * cNorm c p g := by
+    -- surely there is a way to use symmetry of h1
+    sorry
+  -/
+  have h3 : padicNormE ((coeff ℚ_[p] I f) * (coeff ℚ_[p] J g)) * c^(((I + J) : ℤ)) =
+      cNorm c p f * cNorm c p g := by
+    simp_rw [cNorm]
+    simp_rw [PolyToPowerSeries_restricted] at hI hJ
+    rw [hI, hJ]
+    have : ↑(padicNormE ((coeff ℚ_[p] I) ↑f * (coeff ℚ_[p] J) ↑g)) * c ^ (((I + J) : ℤ)) =
+        ↑(padicNormE ((coeff ℚ_[p] I) ↑f)) * c ^ (I : ℤ) * (↑(padicNormE ((coeff ℚ_[p] J) ↑g)) * c ^ (J : ℤ)) := by
+      simp only [Polynomial.coeff_coe, AbsoluteValue.map_mul, Rat.cast_mul]
+      ring_nf
+      have : (c^ (I : ℤ)) * (c ^ (J : ℤ)) = c ^ ((I + J) : ℤ) := by
+        sorry
+      -- why
+    simp_rw [this]
+    rfl
+  /-
+  have h4 : padicNormE (∑ p_1 ∈ Finset.antidiagonal (I+J), (coeff ℚ_[p] p_1.1) f * (coeff ℚ_[p]
+      p_1.2) g) * c^((I +  J) : ℤ) = cNorm c p f * cNorm c p g := by
+    simp only [Polynomial.coeff_coe]
+    rw [← h3]
+    have hc : c ≠ 0 := by
+      exact Ne.symm (ne_of_lt hc)
+    simp only [hc, mul_eq_mul_right_iff, mul_eq_mul_left_iff]
+    left
+
+    -- Need to use the Nonarchimidien property of padicNormE
+
+    -- done by arguement of h1,h2,h3 as we have max at h3 case; do we need h1 and h2??
+    sorry
+   -/
+  have h4 : padicNormE (∑ p_1 ∈ Finset.antidiagonal (I+J), (coeff ℚ_[p] p_1.1) f * (coeff ℚ_[p]
+      p_1.2) g) * c^((I +  J) : ℤ) ≥ cNorm c p f * cNorm c p g := by
+    simp only [Polynomial.coeff_coe, ge_iff_le]
+    rw [← h3]
+    have hc : c ≠ 0 := by
+      exact Ne.symm (ne_of_lt hc)
+    simp only [Polynomial.coeff_coe]
+    -- Need to apply nonarchimedian property
+    sorry
+  have h5 : ↑(padicNormE (∑ p_1 ∈ Finset.antidiagonal (I + J), (coeff ℚ_[p] p_1.1) ↑f * (coeff ℚ_[p] p_1.2) ↑g))
+      * c ^ ((I + J) : ℤ) ≤ cNorm c p (f * g) := by
+    simp_rw [cNorm]
+    have := coeff_mul (I + J) (PolyToPowerSeries_restricted c p f).function
+        (PolyToPowerSeries_restricted c p g).function
+    simp_rw [PolyToPowerSeries_restricted] at this
+    rw [← this]
+    have := cNorm_sSup_le c p (PolyToPowerSeries_restricted c p (f * g)) (I + J)
+    simp only [PolyToPowerSeries_restricted, Polynomial.coe_mul, cNorm] at this
+    exact this
+  simp only [Polynomial.coe_mul, ge_iff_le]
+  simp only [Polynomial.coeff_coe, ge_iff_le] at h4
+  simp only [Polynomial.coeff_coe] at h5
+  -- apply h4 and h5
+
   sorry
+  /-
+  rw [h4] at h5
+  simp only [Polynomial.coe_mul, ge_iff_le]
+  exact h5
+  -/
 
 noncomputable
 def cNorm_poly_AbsVal (hc : 0 < c) : AbsoluteValue (Polynomial ℚ_[p]) ℝ where
@@ -303,12 +553,13 @@ def cNorm_poly_AbsVal (hc : 0 < c) : AbsoluteValue (Polynomial ℚ_[p]) ℝ wher
     have ge := cNorm_poly_mul_ge c p f g hc
     have le := cNorm_mul_le c p hc (PolyToPowerSeries_restricted c p f)
         (PolyToPowerSeries_restricted c p g)
-    simp only [ge_iff_le] at ge
-    simp_rw [cNorm_poly]
-    simp_rw [cNorm_poly] at ge
-    simp_rw [PolyToPowerSeries_restricted] at le
-
-    -- very close need to rw le
+    have : (PolyToPowerSeries_restricted c p f * PolyToPowerSeries_restricted c p g).function =
+       (PolyToPowerSeries_restricted c p (f * g)).function := by
+      sorry
+    rw [this] at le
+    simp only [PolyToPowerSeries_restricted, Polynomial.coe_mul] at le
+    simp only [cNorm_poly, Polynomial.coe_mul, ge_iff_le] at ge
+    simp only [cNorm_poly, Polynomial.coe_mul]
     sorry
   nonneg' := by
     intro f
@@ -337,3 +588,72 @@ def cNorm_poly_AbsVal (hc : 0 < c) : AbsoluteValue (Polynomial ℚ_[p]) ℝ wher
     simp only [Polynomial.coe_add, ge_iff_le]
     simp_rw [help, PolyToPowerSeries_restricted] at this
     exact this
+
+----------------------------------------------------------------------------------------------------
+
+/-
+To show the Weierstrass preparation Theorem we will need a few things:
+The space of restricted powerseries is complete
+The space of polynomials is dense in the space of restricted powerseries
+A generalistation of a lemma giving wanted inequalities
+-/
+
+
+-- For now we are going to define the Weierstrass preparation theorem; this will be moved down later
+
+theorem Weierstrass_preparation_theorem (hc : 0 < c) (f : PowerSeries_restricted_c ℚ_[p] c) (hN : ∃ N : ℕ,
+    (cNorm c p f.1 = padicNormE (coeff ℚ_[p] N f.1) * c^N) ∧ (∀ n : ℕ, N < n →
+    (padicNormE (coeff _ N f.1) * c^n ) ≤ cNorm c p f.1 )) : ∃ (g : Polynomial ℚ_[p]),
+    Polynomial.degree g = (N : ℕ) ∧ ∃ (h : PowerSeries_restricted_c ℚ_[p] c), coeff ℚ_[p] 1 h.1 = 1 ∧
+    f.1 = g * h.1 ∧ cNorm c p g = padicNormE (Polynomial.coeff g N) * c^N ∧ (cNorm c p (h - 1).1) < 1
+    ∧ (cNorm c p (f - PolyToPowerSeries_restricted c p g).1) < 1  := by
+  sorry
+
+instance PowerSeries_restricted_c_is_uniform : NormedRing (PowerSeries_restricted_c ℚ_[p] c) where
+  sorry
+
+
+instance PowerSeries_restricted_c_is_complete : CompleteSpace (PowerSeries_restricted_c ℚ_[p] c) where
+  complete := by
+    -- Want to copy 7.2.7 in Gouvea's book but generalised to c -- will have to do for c = 1 first
+    sorry
+
+-- Not sure how to show dense without defining sets?
+instance Polynomial_is_dense : Dense (PowerSeries_restricted_c ℚ_[p] c) (Polynomial ℚ_[p]) := by
+  sorry
+
+-- Maybe need to physically define Dense?
+
+
+/-
+This should say there is a sequence of polynomials converging to the power series
+i.e. for the function i -> polynomial i
+This may have to be defined via coefficients?
+i.e. ∀ n : ℕ , function j -> coeff n (polynomial j) is a sequence converging to coeff _ n f
+-/
+
+lemma Polynomial_is_dense2 (f : PowerSeries_restricted_c ℚ_[p] c) : ∃ (g : ℕ → Polynomial ℚ_[p]),
+    Tendsto (fun i : ℕ => cNorm c p (f - PolyToPowerSeries_restricted c p (g i)).1 ) atTop (𝓝 0) := by
+  -- Want to use the restriction of a powerseries to a polynomial
+  use (fun i : ℕ => PowerSeries.trunc i f.1)
+
+  /-
+  simp only
+  --intro ε hε
+  --simp only [mem_map, mem_atTop_sets, ge_iff_le, Set.mem_preimage]
+  have : ∀ k : ℕ, cNorm c p (f - PolyToPowerSeries_restricted c p (PowerSeries.trunc k f.1)).1 =
+      sSup {padicNormE (coeff _ n f.1) * c^n | n > k} := by
+    sorry
+  simp_rw [this]
+  simp only [gt_iff_lt]
+  obtain ⟨f, hf⟩ := f
+  -- im guessing we could use that the sSup is less than cNorm c p f.1, which tends to zero
+  -/
+
+  have (i : ℕ): cNorm c p (f - PolyToPowerSeries_restricted c p (PowerSeries.trunc i f.1)).function
+      ≤ cNorm c p f.1 := by
+      -- true since the LHS is the tail of a truncation of f
+    sorry
+
+
+  sorry
