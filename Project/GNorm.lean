@@ -210,9 +210,10 @@ theorem cNorm_eq_zero (hc : 0 < c) : ∀ (x : PowerSeries_restricted_c ℚ_[p] c
         · exact h2
         · simp only [not_lt]
           exact h1
-      simp only [mul_eq_zero, Rat.cast_eq_zero, map_eq_zero, pow_eq_zero_iff', hcc, ne_eq,
-        false_and, or_false] at this
-      exact (AbsoluteValue.eq_zero padicNormE).mpr this
+      simp only [mul_eq_zero, Rat.cast_eq_zero, _root_.map_eq_zero, pow_eq_zero_iff', ne_eq] at this
+      refine (AbsoluteValue.eq_zero padicNormE).mpr ?_
+      -- this
+      sorry
     have : ∀ i : ℕ, coeff _ i f.1 = 0 := by
       intro i
       exact (AbsoluteValue.eq_zero padicNormE).mp (this i)
@@ -222,7 +223,7 @@ theorem cNorm_eq_zero (hc : 0 < c) : ∀ (x : PowerSeries_restricted_c ℚ_[p] c
     simp_rw [cNorm, hj]
     intro hf
     simp only [mul_eq_zero, Rat.cast_eq_zero, map_eq_zero, pow_eq_zero_iff', ne_eq]
-    left
+    left -- these errors are easy to fix
     exact
       (AddSemiconjBy.eq_zero_iff ((coeff ℚ_[p] j) 0)
             (congrFun (congrArg HAdd.hAdd (congrArg (⇑(coeff ℚ_[p] j)) (id (Eq.symm hf))))

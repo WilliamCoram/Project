@@ -166,7 +166,7 @@ noncomputable
 def slopes (i : ℕ) : V → ℤ :=
   fun v => (fun_y p c f v - fun_y p c f i) / (v - i)
 
--- This requires the set to be non-empty; since the Finset will be non-empty we can conclude this easily
+-- Will need to adjust to when it is non-empty and not; but this is only a slight change
 noncomputable
 def min_slope (i : ℕ) : ℤ :=
   Finset.min' ((V.attach).image (slopes p c f V i)) sorry
@@ -177,23 +177,31 @@ def reduced_finset (i : ℕ) : Finset ℕ :=
   V.filter (λ (a : ℕ) =>  (fun_y p c f a - fun_y p c f i) / (a - i) = min_slope p c f V i)
 
 
--- again this will need the requirement of the set being non-empty; but once again is trivial
+-- will be reliant on V being nonempty following from above
 noncomputable
 def next_point (i : ℕ) : ℕ :=
   Finset.min' (reduced_finset p c f V i) sorry
 
+-- This will need to have a fun_set nonempty if in the second part
 /- Indexing x coord -/
 noncomputable
 def Index_x : ℕ → ℕ
   | 0 => 0 -- Just need to adjust 0 to the first point
   | i + 1 => next_point p c f (fun_set (Index_x i)) (Index_x i)
 
+-- This will need a fun_set non_empty if else map to???
 /- Indexing slope -/
 noncomputable
 def Index_slope : ℕ → ℤ :=
   fun i => min_slope p c f (fun_set (Index_x p c f i)) (Index_x p c f i)
 
-structure NewtonPolygon where
-  fun_x : ℕ → ℕ
-  fun_slope : ℕ → ℤ
-  relation : fun_slope i = min_slope p c f (fun_set (fun_x i)) (fun_x i)
+structure lowerconvexhull where
+  points_x : ℕ → ℕ
+  points_y : ℕ → ℤ
+  slopes : ℕ → ℤ
+  relation : ∀ i : ℕ, points_y (i + 1) - points_y i = slopes i * (points_x (i + 1) - points_x (i))
+  slopes_increase : ∀ i : ℕ, slopes (i + 1) ≥ slopes i
+
+noncomputable
+def NewtonPolygon (f : PowerSeries_restricted_c ℚ_[p] c) : lowerconvexhull :=
+  ⟨Index_x p c f, fun_y p c f, Index_slope p c f, sorry, sorry⟩
