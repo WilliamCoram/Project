@@ -11,37 +11,6 @@ structure PowerSeries_restricted_c (R : Type*) (c : ℝ) [NormedRing R] where
   convergence : Tendsto (fun (i : ℕ) => (norm (coeff R i function)) * c^i) atTop (𝓝 0)
 
 /-
--- is it maybe easier to show it is a subring of the power series ring?
-instance [NormedRing R] : Ring (PowerSeries_restricted_c R c) where
-  zero := {function := 0, convergence := by
-              simp only [map_zero, norm_zero, zero_mul, tendsto_const_nhds_iff] }
-  add := sorry
-  add_assoc := sorry
-  zero_add := sorry
-  add_zero := sorry
-  nsmul := sorry
-  add_comm := sorry
-  mul := sorry
-  left_distrib := sorry
-  right_distrib := sorry
-  zero_mul := sorry
-  mul_zero := sorry
-  mul_assoc := sorry
-  one := sorry
-  one_mul := sorry
-  mul_one := sorry
-  neg := sorry
-  zsmul := sorry
-  neg_add_cancel := sorry
-  sub := sorry
-  sub_eq_add_neg := sorry
-  nsmul_zero := sorry
-  nsmul_succ := sorry
-  zsmul_zero' := sorry
-  zsmul_succ' := sorry
-  zsmul_neg' := sorry
-
-  -/
 
 def PowerSeries_restricted_set [NormedRing R] : Set (PowerSeries R) :=
   {g : PowerSeries R | ∃ f : PowerSeries_restricted_c R c, f.function = g}
@@ -112,6 +81,8 @@ instance subring [NormedRing R] : Subring (PowerSeries R) where
 noncomputable
 def ring [NormedRing R] : Ring {g : PowerSeries R | ∃ f : PowerSeries_restricted_c R c, f.function = g} := by
   exact Subring.toRing (subring c)
+
+-/
 
 instance [NormedRing R] : Ring (PowerSeries_restricted_c R c) := by
 
@@ -619,23 +590,9 @@ instance PowerSeries_restricted_c_is_complete : CompleteSpace (PowerSeries_restr
     -- Want to copy 7.2.7 in Gouvea's book but generalised to c -- will have to do for c = 1 first
     sorry
 
--- Not sure how to show dense without defining sets?
-instance Polynomial_is_dense : Dense (PowerSeries_restricted_c ℚ_[p] c) (Polynomial ℚ_[p]) := by
-  sorry
 
--- Maybe need to physically define Dense?
-
-
-/-
-This should say there is a sequence of polynomials converging to the power series
-i.e. for the function i -> polynomial i
-This may have to be defined via coefficients?
-i.e. ∀ n : ℕ , function j -> coeff n (polynomial j) is a sequence converging to coeff _ n f
--/
-
-lemma Polynomial_is_dense2 (f : PowerSeries_restricted_c ℚ_[p] c) : ∃ (g : ℕ → Polynomial ℚ_[p]),
+lemma Polynomial_is_dense (f : PowerSeries_restricted_c ℚ_[p] c) : ∃ (g : ℕ → Polynomial ℚ_[p]),
     Tendsto (fun i : ℕ => cNorm c p (f - PolyToPowerSeries_restricted c p (g i)).1 ) atTop (𝓝 0) := by
-  -- Want to use the restriction of a powerseries to a polynomial
   use (fun i : ℕ => PowerSeries.trunc i f.1)
 
   /-
