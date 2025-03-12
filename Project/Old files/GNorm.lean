@@ -10,7 +10,7 @@ structure PowerSeries_restricted_c (R : Type*) (c : ℝ) [NormedRing R] where
   function : PowerSeries R
   convergence : Tendsto (fun (i : ℕ) => (norm (coeff R i function)) * c^i) atTop (𝓝 0)
 
-/-
+
 
 def PowerSeries_restricted_set [NormedRing R] : Set (PowerSeries R) :=
   {g : PowerSeries R | ∃ f : PowerSeries_restricted_c R c, f.function = g}
@@ -82,7 +82,7 @@ noncomputable
 def ring [NormedRing R] : Ring {g : PowerSeries R | ∃ f : PowerSeries_restricted_c R c, f.function = g} := by
   exact Subring.toRing (subring c)
 
--/
+
 
 instance [NormedRing R] : Ring (PowerSeries_restricted_c R c) := by
 

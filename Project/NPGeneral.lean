@@ -99,6 +99,8 @@ def LowerConvexHull_n (h : (∃ i,  Index_x N f_x f_y i = N - 1)) : ℕ :=
 noncomputable
 def LowerConvexHull_set : LowerConvexHull k where
   n := have h : (∃ i,  Index_x N f_x f_y i = N - 1) := by
+        simp [Index_x]
+        -- by our construction, but I am stuck on formalising this
         sorry
     LowerConvexHull_n N f_x f_y h
   x := fun i => f_x (Index_x N f_x f_y i)
@@ -112,8 +114,6 @@ def LowerConvexHull_set : LowerConvexHull k where
     cases r
     · simp only
       -- True by hx and NextPoint 0 < n
-      have : NextPoint N f_x f_y 0 < n  := by
-        sorry
       sorry
     · simp only
       -- this is only true for n < N, so we have lost information somewhere!
@@ -130,6 +130,16 @@ def LowerConvexHull_set : LowerConvexHull k where
       -- this is just showing the slope to a later point is greater; which works as both slopes are in
       -- the set of slopes and the first one is the min
       -- how to do this in lean?
+      ring_nf
+      obtain ⟨hx⟩ := hx
+      simp only [le_neg_add_iff_add_le, add_sub_cancel]
+      have : 0 < (f_x (Index_x N f_x f_y (i+1)) - f_x (Index_x N f_x f_y i)):= by
+        sorry
+      rw [mul_comm]
+      simp_rw [← div_eq_inv_mul]
+      simp only [div_le_div_iff_of_pos_right this]  -- why does this not work?
+      -- now we just need to show f_y is strictly mono; this is true by construction
+
       sorry
     have h1 :
         (f_y (Index_x N f_x f_y (i+1)) - f_y (Index_x N f_x f_y i)) *
@@ -138,6 +148,7 @@ def LowerConvexHull_set : LowerConvexHull k where
         (f_x (Index_x N f_x f_y (i+1)) - f_x (Index_x N f_x f_y i)) := by
       -- multiply out at h
       sorry
+
     -- rearrange h1
     sorry
 
@@ -146,7 +157,7 @@ end LowerConvexHull
 ----------------------------------------------------------------------------------------------------
 namespace NewtonPolygons
 
-open Polynomial
+open Polynomial LowerConvexHull
 
 variable {k : Type*} [LinearOrderedField k]
 variable (f : Polynomial k)
@@ -163,7 +174,8 @@ def coeff_set_is_finite : Set.Finite (coeff_set f) := by
   have : {i : ℕ | i ≤ degree f}.Finite := by
     cases degree f
     · simp only [le_bot_iff, WithBot.natCast_ne_bot, Set.setOf_false, Set.finite_empty]
-    · exact Set.finite_lt_nat ?_ -- i am unsure how to not grey out the a†
+    · -- exact Set.finite_lt_nat ?_ -- i am unsure how to not grey out the a†
+      sorry
   exact Set.Finite.sep this (fun i => coeff f i ≠ 0)
 
 /-- The number of coefficients that have non-zero coefficients-/
@@ -187,14 +199,13 @@ def fun_x' : ℕ → k :=
   fun i => fun_x f i
 
 /-- fun_x is strictly increasing -/
-def fun_x.isMono : (StrictMonoOn (fun_x f) (Set.Ico 0 (Polynomial_N f))) := by
+def fun_x.isMono : (StrictMonoOn (fun_x' f) (Set.Ico 0 (Polynomial_N f))) := by
   -- certainly true by construction; have coeff f fun_x (Polynomial_N f) ≠ 0 as fun_x (Polynomial_N f) = degree f
   rw [StrictMonoOn]
   simp only [Set.mem_Ico, zero_le, true_and]
   intro a ha b hb hab
   cases a
-  · simp_rw [fun_x]
-
+  ·
     sorry
   ·
     sorry
@@ -204,3 +215,9 @@ def fun_x.isMono : (StrictMonoOn (fun_x f) (Set.Ico 0 (Polynomial_N f))) := by
 noncomputable
 def fun_y : ℕ → k :=
   fun i => coeff f (fun_x f i)
+
+noncomputable
+def NewtonPolygon : LowerConvexHull k :=
+  LowerConvexHull_set (Polynomial_N f) (fun_x' f) (fun_y f) -- I think this is missing the requirement of strictly increasing
+
+end NewtonPolygons

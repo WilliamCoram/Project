@@ -1,4 +1,6 @@
-import Mathlib
+    import Mathlib
+
+set_option maxHeartbeats 400000
 
 variable (c : ℝ) (p : ℕ) [hp : Fact (Nat.Prime p)]
 
@@ -76,15 +78,33 @@ instance add (hc : 0 < c) : Add (RestrictedPowerSeries_c R c) :=
                   exact this
                 exact squeeze_zero h1 h2 h3}⟩
 
+/- Why do I need to use (add R c hc).add instead of just + -/
 @[simp]
-theorem coe_add (hc : 0 < c) (f g : RestrictedPowerSeries_c R c) : ⇑(f + g) = f + g :=
+theorem coe_add (hc : 0 < c) (f g : RestrictedPowerSeries_c R c) :
+    ⇑((add R c hc).add f g) = f + g :=
   rfl
 
-/--/
 
-def zero : RestrictedPowerSeries_c R c hc:=
-  {function := 0, convergence := by
-              simp only [map_zero, norm_zero, zero_mul, tendsto_const_nhds_iff] }
+
+instance instZero : Zero (RestrictedPowerSeries_c R c) :=
+  ⟨{function := 0
+    convergence' := by
+      simp only [map_zero, norm_zero, zero_mul, tendsto_const_nhds_iff] }⟩
+
+instance (hc : 0 < c): AddMonoid (RestrictedPowerSeries_c R c) where
+  add := sorry
+  zero_add f := by
+
+    ext i --- this is not neccesarily what I want
+
+
+    sorry
+
+
+
+
+
+/--/
 
 noncomputable
 def one : RestrictedPowerSeries_c R c hc :=
@@ -105,31 +125,3 @@ def one : RestrictedPowerSeries_c R c hc :=
     simp only [h, sub_zero, norm_zero, mul_zero, zero_mul, sub_self]
     exact mem_of_mem_nhds hε
   }
-
-
-
-instance [NormedRing R] : Ring (RestrictedPowerSeries_c R c hc) where
-  zero := zero R c
-  one := one R c
-  add f g := {function := f.function + g.function, convergence := by
-                obtain ⟨f, hf⟩ := f
-                obtain ⟨g, hg⟩ := g
-                simp only [map_add]
-                have h1 : ∀ (t : ℕ), 0 ≤ ‖(coeff R t) f + (coeff R t) g‖ * c ^ t := by
-                  intro t
-                  have : 0 < c^t := by
-                    exact pow_pos hc t
-                  exact mul_nonneg (norm_nonneg _) (le_of_lt this)
-                have h2 : ∀ (t : ℕ), ‖(coeff R t) f + (coeff R t) g‖ * c ^ t ≤ ‖coeff R t f‖ * c^t +
-                    ‖coeff R t g‖ * c^t := by
-                  intro t
-                  have := mul_le_mul_of_nonneg_right (norm_add_le (coeff R t f) (coeff R t g))
-                     (le_of_lt (pow_pos hc t))
-                  rw [RightDistribClass.right_distrib] at this
-                  exact this
-                have h3 : Tendsto (fun t ↦ ‖(coeff R t) f‖ * c ^ t + ‖(coeff R t) g‖ * c ^ t) atTop (𝓝 0) := by
-                  have := Tendsto.add hf hg
-                  simp only [add_zero] at this
-                  exact this
-                exact squeeze_zero h1 h2 h3
-              }
