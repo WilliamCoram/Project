@@ -11,6 +11,11 @@ def Convergent (f : PowerSeries R) : Prop :=
 def CRestrictedPowerSeries : Set (PowerSeries R) :=
   {f | Convergent c R f }
 
+lemma C2 : ∀ (f : PowerSeries R), Tendsto (fun i => ∑ j ∈ Finset.range i, coeff R j f * x^j) atTop (𝓝 0) := by
+  intro f
+  sorry
+
+
 namespace CRestrictedPowerSeries
 
 def zero : 0 ∈ CRestrictedPowerSeries c R := by
@@ -79,14 +84,52 @@ instance IsAddSubgroup : AddGroup (CRestrictedPowerSeries c R) :=
 variable [IsUltrametricDist R]
 
 
+
 -- Thm 3.50 from Principles of Mathematical analysis
 lemma ConvergenceOfProdOfSeq (a b c f g : ℕ → ℝ) (hf : f = fun i => ∑ j ∈ Finset.range i, a j)
     (hg : g = fun i => ∑ j ∈ Finset.range i, b j) (hff : Tendsto f atTop (𝓝 A))
+    (hfff : Tendsto (fun i => ∑ j ∈ Finset.range i, ‖a j‖) atTop (𝓝 α))
     (hgg : Tendsto g atTop (𝓝 B)) (hc : c = fun i => ∑p ∈ Finset.antidiagonal i, a p.1 * b p.2) :
     Tendsto (fun n => ∑ i ∈ Finset.range n, c i) atTop (𝓝 (A * B)) := by
   have := Tendsto.mul hff hgg
-  -- copy from book
+  let e := fun i => g i - B
+  let h := fun i => ∑ j ∈ Finset.range i, c j
+  have Step1 (n : ℕ) : h n = f n * B + ∑ j ∈ Finset.range n, a j * e (n - j) := by
+    simp_rw [h, hf, e, hg, hc]
+    have : ∑ x ∈ Finset.range n, a x * (∑ j ∈ Finset.range (n - x), b j - B) =
+        ∑ x ∈ Finset.range n, a x * ∑ j ∈ Finset.range (n - x), b j - ∑ x ∈ Finset.range n, a x * B := by
+      ring_nf
+      simp only [Finset.sum_sub_distrib, h, e]
+    rw [this, add_comm]
+    have : ∑ x ∈ Finset.range n, a x * B = (∑ j ∈ Finset.range n, a j) * B := by
+      rw [Finset.sum_mul]
+    rw [this]
+    simp only [sub_add_cancel]
+    -- Have shown this is true on paper; not sure how to formalise it
 
+    sorry
+  let γ := fun i => ∑ j ∈ Finset.range i, (a j * (e (i - j)))
+  have Step2 : Tendsto γ atTop (𝓝 0) := by
+    -- follow notes
+    have : Tendsto e atTop (𝓝 0) := by
+      simp_rw [e]
+      have := Tendsto.add_const (-B) hgg
+      simp only [add_neg_cancel, h, e] at this
+      exact this
+    apply NormedAddCommGroup.tendsto_nhds_zero.mp at this
+
+    -- need to show some inequality for γn; then show the limsup of γ is ≤ ε
+    -- not sure how to do these ε proofs right now
+    sorry
+  have Step3 : Tendsto (fun i => f i * B) atTop (𝓝 (A * B)) := by
+    exact Tendsto.mul_const B hff
+  have Step4 (i : ℕ) : h i = f i * B + γ i := by
+    simp_rw [Step1, γ]
+  have Step5 : Tendsto (fun i => f i * B + γ i) atTop (𝓝 (A * B)) := by
+    have := Tendsto.add Step3 Step2
+    simp only [add_zero] at this
+    exact this
+  -- just need to rewrite with h, Step4 and exact Step5
   sorry
 
 lemma help : f ∈ CRestrictedPowerSeries c R →
@@ -106,9 +149,18 @@ lemma PartialSumConvergent_implies_ZeroSeq (a : ℕ → ℝ) :
   sorry
 
 
+
+
+
+
+
+
 def mul (f g : PowerSeries R) (hf : f ∈ CRestrictedPowerSeries c R)
     (hg : g ∈ CRestrictedPowerSeries c R) : (f * g) ∈ CRestrictedPowerSeries c R := by
   simp_rw [CRestrictedPowerSeries, Convergent, Set.mem_setOf_eq, PowerSeries.coeff_mul]
+
+
+  /-
   have hc := fun i ↦ pow_nonneg c.2 i
   have h1 : ∀  i : ℕ, 0 ≤ ‖∑ p ∈ Finset.antidiagonal i, (coeff R p.1) f * (coeff R p.2) g‖
       * c^i := by
@@ -135,6 +187,8 @@ def mul (f g : PowerSeries R) (hf : f ∈ CRestrictedPowerSeries c R)
     exact mul_le_mul_of_nonneg_right (this i) (hc i)
   have h3 : Tendsto (fun i ↦ (∑ p ∈ Finset.antidiagonal i, ‖coeff R p.1 f‖ * ‖coeff R p.2 g‖)
       * c ^ i) atTop (𝓝 0) := by
+
+    /-
     have : ∀ i : ℕ, (∑ p ∈ Finset.antidiagonal i, ‖(coeff R p.1) f‖ * ‖(coeff R p.2) g‖) * c ^ i =
         ∑ p ∈ Finset.antidiagonal i, (‖coeff R p.1 f‖ * c^p.1) * (‖coeff R p.2 g‖ * c^p.2) := by
       intro i
@@ -154,11 +208,14 @@ def mul (f g : PowerSeries R) (hf : f ∈ CRestrictedPowerSeries c R)
         (fun i => ∑ p ∈ Finset.antidiagonal i, ‖coeff R p.1 f‖ * c^p.1 * (‖coeff R p.2 g‖ * c^p.2))
         (fun i => ∑ j ∈ Finset.range i, ‖coeff R j f‖ * c^j)
         (fun i => ∑ j ∈ Finset.range i, ‖coeff R j g‖ * c^j)
-        rfl rfl (help c R hf) (help c R hg) rfl
-    simp only [mul_zero] at this -- this will be removed when I change what the limits are in help
+        rfl rfl (help c R hf) sorry (help c R hg) rfl
     apply PartialSumConvergent_implies_ZeroSeq at this
     exact this
+    -/
+
+    sorry
   exact squeeze_zero h1 h2 h3
+  -/
 
 def subring: Subring (PowerSeries R) where
   carrier := CRestrictedPowerSeries c R

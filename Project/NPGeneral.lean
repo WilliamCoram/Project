@@ -83,13 +83,14 @@ def NextPoint (i : ℕ) : ℕ :=
       (∃ j : ℕ, i < j ∧ j < N ∧ (f_y j - f_y i) / (f_x j - f_x i) = MinSlope N f_x f_y i Nonempty)
     if h : ∃ j : ℕ, i < j ∧ j < N ∧ (f_y j - f_y i) / (f_x j - f_x i) = MinSlope N f_x f_y i Nonempty
       then Nat.find h
-     else i + 1 -- so that it is strictly mono
+     else i + 1 -- so that it is strictly mono; this can be removed by having a lemma saying there is
+                -- always a point j
   else i + 1
 
 noncomputable
 def Index_x : ℕ → ℕ
   | 0 => 0
-  | i + 1 => NextPoint N f_x f_y i
+  | i + 1 => NextPoint N f_x f_y (Index_x i) -- need index points
 
 noncomputable
 def LowerConvexHull_n (h : (∃ i,  Index_x N f_x f_y i = N - 1)) : ℕ :=
@@ -99,7 +100,7 @@ def LowerConvexHull_n (h : (∃ i,  Index_x N f_x f_y i = N - 1)) : ℕ :=
 noncomputable
 def LowerConvexHull_set : LowerConvexHull k where
   n := have h : (∃ i,  Index_x N f_x f_y i = N - 1) := by
-        simp [Index_x]
+
         -- by our construction, but I am stuck on formalising this
         sorry
     LowerConvexHull_n N f_x f_y h
@@ -107,15 +108,13 @@ def LowerConvexHull_set : LowerConvexHull k where
   y := fun i => f_y (Index_x N f_x f_y i)
   increasing := by
     refine StrictMono.strictMonoOn ?_ (Set.Ico 0 (LowerConvexHull_n N f_x f_y sorry))
-    simp_rw [Index_x]
     refine strictMono_nat_of_lt_succ ?_
     intro r
-    simp only
     cases r
-    · simp only
+    ·
       -- True by hx and NextPoint 0 < n
       sorry
-    · simp only
+    ·
       -- this is only true for n < N, so we have lost information somewhere!
       sorry
 
