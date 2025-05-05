@@ -10,10 +10,9 @@ structure LowerConvexHull (k : Type*) [LinearOrderedField k] where
   /-- The x-coordinates are strictly increasing -/
   increasing : StrictMonoOn x (Set.Ico 0 n)
   /-- The Newton polygon is lower convex.
-  This considers three successive points with indices `j`, `j+1` and `j+2`.
-  (Replace `<` by `≤` if successive slopes are allowed to be equal). -/
-  convex : ∀ j : ℕ, j + 2 < n →
-      x j * y (j + 2) + x (j + 1) * y j  + x (j + 2) * y (j + 1) <
+  This considers three successive points with indices `j`, `j+1` and `j+2`. -/
+  convex : ∀ j : ℕ, j + 2 ≤ n →
+      x j * y (j + 2) + x (j + 1) * y j  + x (j + 2) * y (j + 1) ≤
         x j * y (j + 1) + x (j + 1) * y (j + 2) + x (j + 2) * y j
 
 namespace LowerConvexHull

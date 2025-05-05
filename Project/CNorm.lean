@@ -1,7 +1,7 @@
 import Mathlib
-import Project.RPSNew
+import Project.RestrictedPowerSeries
 
-variable (c : NNReal) (R : Type*) [NormedRing R]
+variable (c : NNReal) (R : Type*) [NormedRing R] [IsUltrametricDist R]
 
 open PowerSeries Filter CRestrictedPowerSeries
 open scoped Topology
@@ -106,11 +106,13 @@ lemma nonArchimedean : ∀ f g : CRestrictedPowerSeries c R,
 lemma add_le : ∀ f g : CRestrictedPowerSeries c R,
   CRestricted c R (f + g) ≤ CRestricted c R f + CRestricted c R g := by
   intro f g
+  obtain ⟨f, hf⟩ := f
+  obtain ⟨g, hg⟩ := g
   simp_rw [CRestricted, cNorm]
   have h1 : sSup {x | ∃ (i : ℕ), ‖(coeff R i) ↑(f + g)‖ * ↑c^i = x} ≤
       sSup {x | ∃ (i : ℕ), (‖(coeff R i) ↑f‖ + ‖(coeff R i) ↑g‖) * ↑c^i = x} := by
     -- follows from norm_add_le
-
+    simp only [map_add]
     sorry
   have h2 : sSup {x | ∃ (i : ℕ), (‖(coeff R i) ↑f‖ + ‖(coeff R i) ↑g‖) * ↑c^i = x} ≤
       sSup {x | ∃ (i : ℕ), ‖(coeff R i) ↑f‖ * ↑c^i = x} +
@@ -153,8 +155,10 @@ instance : RingSeminorm (CRestrictedPowerSeries c R) where
   neg' := cNorm.neg c R
 
 
-
+instance : RingNorm (CRestrictedPowerSeries c R) where
 
 
 
 ------ We can also show it is a non-Archimedean absolute value on the field of rational functions
+
+
